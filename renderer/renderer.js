@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (transactionName && priceText) {
             const price = parseFloat(priceText);
 
+            if(price >= 0 && price <= 10000000 && !(/\d/.test(transactionName)) && (transactionName.length) < 30){
             // Add new transaction to the manager and UI
             expenseManager.addExpense(transactionName, price, selectedCategory, transactionType);
             ui.addExpenseToTable({ name: transactionName, price: price, category: selectedCategory });
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update total and clear inputs
             ui.updateTotal(expenseManager.calculateTotal());
             ui.clearInputs(expenseInput, priceInput);
+            }
         }
     });
 });
