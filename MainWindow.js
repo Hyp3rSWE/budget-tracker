@@ -17,7 +17,7 @@ class MainWindow {
             },
         });
 
-        this.window.loadFile('index.html');
+        this.window.loadFile('./renderer/index.html');
 
         this.window.on('closed', () => {
             this.window = null;
