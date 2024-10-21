@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Tracker</h1>
+        <div class="input-section">
+            <label for="expense">Expense:</label>
+            <input type="text" id="expense" placeholder="Expense">
+            <label for="price">Price:</label>
+            <input type="number" id="price" placeholder="Price">
+            <button id="addExpenseBtn">Add Expense</button>
+        </div>
+        <table id="expenseTable">
+            <thead>
+                <tr>
+                    <th>Expense</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be dynamically added here -->
+            </tbody>
+        </table>
+        <div class="total">
+            <label>Total: </label><span id="total">0.00</span>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
