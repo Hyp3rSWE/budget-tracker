@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Define categories for income and expense
     const categories = {
-        income: ['Salary', 'Freelancing', 'Investments', 'Rent',"Other"],
-        expense: ['Food', 'Housing', 'Utilities', 'Health',"Transportation", 'Miscellaneous',"Entertainment"]
+        income: ['Salary', 'Freelancing', 'Investments', 'Other'],
+        expense: ['Food', 'Transport', 'Utilities', 'Rent', 'Other']
     };
 
     // Function to update categories based on the selected transaction type
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Add new transaction to the manager and UI
             expenseManager.addExpense(transactionName, price, selectedCategory, transactionType);
-            ui.addExpenseToTable({ name: transactionName, price: price, category: selectedCategory });
+            ui.addExpenseToTable({ name: transactionName, category: selectedCategory, price: price });
 
             // Update total and clear inputs
             ui.updateTotal(expenseManager.calculateTotal());
