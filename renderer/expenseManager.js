@@ -4,9 +4,9 @@ export class ExpenseManager {
     }
 
     
-    addExpense(expenseName, price) {
-        const insertQuery = `INSERT INTO expenses (name, price) VALUES (?, ?)`;
-        this.database.run(insertQuery, [expenseName, price], function(err) {
+    addExpense(description, amount , date) {
+        const insertQuery = `INSERT INTO expenses (description , amount , date) VALUES (?, ? , ?)`;
+        this.database.run(insertQuery, [description, amount ,date], function(err) {
             if (err) {
                 console.error('Error adding expense:', err.message);
             } else {
