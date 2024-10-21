@@ -1,5 +1,6 @@
 export class ExpenseManager {
     constructor() {
+        // change the name of the database if it is not correct 
         database = "expenses-tracker";
     }
 
