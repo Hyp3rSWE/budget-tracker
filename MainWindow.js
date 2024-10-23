@@ -7,17 +7,19 @@ class MainWindow {
     }
 
     createWindow() {
+        console.log("Creating window");
         this.window = new BrowserWindow({
             width: 600,
             height: 400,
             webPreferences: {
-                preload: path.join(__dirname, 'preload.js'),
-                contextIsolation: true,
-                enableRemoteModule: false,
+                // Remove preload and allow Node.js in renderer
+                nodeIntegration: true, // Allow Node.js integration
+                contextIsolation: false, // Disable context isolation
+                enableRemoteModule: false, // Disable remote module for better security
             },
         });
 
-        this.window.loadFile('./renderer/index.html');
+        this.window.loadFile('./renderer/index.html'); // Ensure the path is correct
 
         this.window.on('closed', () => {
             this.window = null;

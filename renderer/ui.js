@@ -1,51 +1,57 @@
 export class UI {
-    constructor(expenseTableId, totalLabelId, categorySelectId) {
-        this.expenseTable = document.getElementById(expenseTableId).getElementsByTagName('tbody')[0];
-        this.totalLabel = document.getElementById(totalLabelId);
-        this.categorySelect = document.getElementById(categorySelectId);
-    }
-
-    addExpenseToTable(expense) {
-        const newRow = this.expenseTable.insertRow();
-        const expenseCell = newRow.insertCell(0);
-        const categoryCell = newRow.insertCell(1);
-        const priceCell = newRow.insertCell(2);
-
-        expenseCell.innerText = expense.name;
-        categoryCell.innerText = expense.category; // Displaying the category
-        priceCell.innerText = expense.price.toFixed(2); // Formatting price to two decimal places
+    constructor(expenseTableId, totalId, categorySelectId) {
+        this.expenseTableId = expenseTableId;
+        this.totalId = totalId;
+        this.categorySelectId = categorySelectId;
     }
 
     loadExpenses(expenses) {
-        this.expenseTable.innerHTML = ''; // Clear existing rows before loading
-        expenses.forEach(expense => this.addExpenseToTable(expense));
+        const tableBody = document.getElementById(this.expenseTableId).querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        expenses.forEach(expense => {
+            this.addExpenseToTable(expense);
+        });
+    }
+
+    addExpenseToTable(expense) {
+        const tableBody = document.getElementById(this.expenseTableId).querySelector('tbody');
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${expense.name}</td>
+            <td>${expense.category || 'N/A'}</td>
+            <td>${expense.price.toFixed(2)}</td>
+        `;
+        tableBody.appendChild(row);
     }
 
     updateTotal(total) {
-        this.totalLabel.innerText = total.toFixed(2);
+        document.getElementById(this.totalId).innerText = total.toFixed(2);
     }
 
-    clearInputs(expenseInput, priceInput) {
-        expenseInput.value = '';
-        priceInput.value = '';
-        this.categorySelect.selectedIndex = 0; // Reset category selection
+    clearInputs(...inputs) {
+        inputs.forEach(input => {
+            input.value = '';
+        });
     }
 
     populateCategories(transactionType) {
-        this.categorySelect.innerHTML = ''; // Clear existing options
-        let categories = [];
+        const categorySelect = document.getElementById(this.categorySelectId);
+        categorySelect.innerHTML = ''; 
 
-        if (transactionType === 'income') {
-            categories = ['Salary', 'Freelancing', 'Investments', 'Other'];
-        } else if (transactionType === 'expense') {
-            categories = ['Food', 'Transport', 'Utilities', 'Rent', 'Other'];
-        }
+        const categories = transactionType === 'income' 
+            ? ['Salary', 'Business', 'Investment'] 
+            : ['Food', 'Transport', 'Utilities', 'Entertainment'];
+
+            console.log('categories from ui.js');
+            console.log(categories)
 
         categories.forEach(category => {
             const option = document.createElement('option');
             option.value = category;
             option.textContent = category;
-            this.categorySelect.appendChild(option);
+            categorySelect.appendChild(option);
         });
     }
 }

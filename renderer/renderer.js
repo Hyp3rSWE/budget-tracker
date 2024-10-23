@@ -1,63 +1,55 @@
+// Assuming you're using sqlite3 in your ExpenseManager class
 import { ExpenseManager } from './expenseManager.js';
 import { UI } from './ui.js';
+
+console.log("hi 2");
 
 document.addEventListener('DOMContentLoaded', () => {
     const addExpenseBtn = document.getElementById('addExpenseBtn');
     const expenseInput = document.getElementById('expense');
     const priceInput = document.getElementById('price');
-    const categorySelect = document.getElementById('category');
     const transactionTypeSelect = document.getElementById('transactionType');
+    const categorySelect = document.getElementById('category');
 
     const expenseManager = new ExpenseManager();
-    const ui = new UI('expenseTable', 'total');
+    const ui = new UI('expenseTable', 'total', 'category');
 
-    // Load initial expenses or incomes
-    ui.loadExpenses(expenseManager.getExpenses());
-    ui.updateTotal(expenseManager.calculateTotal());
-
-    // Define categories for income and expense
-    const categories = {
-        income: ['Salary', 'Freelancing', 'Investments', 'Other'],
-        expense: ['Food', 'Transport', 'Utilities', 'Rent', 'Other']
-    };
-
-    // Function to update categories based on the selected transaction type
-    function updateCategories() {
-        const selectedType = transactionTypeSelect.value;
-        categorySelect.innerHTML = ''; // Clear existing options
-        categories[selectedType].forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
+    // Load existing expenses from the database
+    expenseManager.getExpenses((expenses) => {
+        ui.loadExpenses(expenses);
+        expenseManager.calculateTotal((total) => {
+            ui.updateTotal(total);
         });
-    }
+    });
 
-    // Initial population of categories
-    updateCategories();
+    // Populate categories based on transaction type
+    transactionTypeSelect.addEventListener('change', (event) => {
+        const selectedType = event.target.value;
+        ui.populateCategories(selectedType);
+    });
 
-    // Update categories when transaction type changes
-    transactionTypeSelect.addEventListener('change', updateCategories);
+    console.log("hi 1");
 
-    // Event listener for adding a transaction
+    // Trigger category population on page load
+    ui.populateCategories(transactionTypeSelect.value);
+
     addExpenseBtn.addEventListener('click', () => {
-        const transactionName = expenseInput.value.trim();
+        const expenseName = expenseInput.value.trim();
         const priceText = priceInput.value.trim();
-        const selectedCategory = categorySelect.value;
-        const transactionType = transactionTypeSelect.value; // Get the transaction type
+        const category = categorySelect.value;
 
-        if (transactionName && priceText) {
+        if (expenseName && priceText) {
             const price = parseFloat(priceText);
 
-            if(price >= 0 && price <= 10000000 && !(/\d/.test(transactionName)) && (transactionName.length) < 30){
-            // Add new transaction to the manager and UI
-            expenseManager.addExpense(transactionName, price, selectedCategory, transactionType);
-            ui.addExpenseToTable({ name: transactionName, category: selectedCategory, price: price });
+            // Add new expense to the manager and UI
+            expenseManager.addExpense(expenseName, price,category);
+            ui.addExpenseToTable({ name: expenseName, category: category, price: price });
 
             // Update total and clear inputs
-            ui.updateTotal(expenseManager.calculateTotal());
+            expenseManager.calculateTotal((total) => {
+                ui.updateTotal(total);
+            });
             ui.clearInputs(expenseInput, priceInput);
-            }
         }
     });
 });

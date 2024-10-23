@@ -1,22 +1,55 @@
+const sqlite3 = require('sqlite3').verbose();
+
 export class ExpenseManager {
     constructor() {
-        this.expenses = [
-            { name: 'Veg', price: 40.0 },
-            { name: 'Fruit', price: 70.0 },
-            { name: 'Fuel', price: 60.0 }
-        ];
+        this.db = new sqlite3.Database('budget-tracker.db', (err) => {
+            if (err) {
+                console.error('Error opening database ' + err.message);
+            } else {
+                this.createTable();
+            }
+        });
     }
 
-    addExpense(expenseName, price) {
-        const newExpense = { name: expenseName, price: price };
-        this.expenses.push(newExpense);
+    createTable() {
+        this.db.run(`CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating table ' + err.message);
+            }
+        });
     }
 
-    getExpenses() {
-        return this.expenses;
+    addExpense(expenseName, price,category) {
+        this.db.run(`INSERT INTO expenses (name, price,category) VALUES (?, ?,?)`, [expenseName, price,category], (err) => {
+            if (err) {
+                console.error('Error inserting expense ' + err.message);
+            }
+        });
     }
 
-    calculateTotal() {
-        return this.expenses.reduce((total, expense) => total + expense.price, 0);
+    getExpenses(callback) {
+        this.db.all(`SELECT name, price,category FROM expenses`, [], (err, rows) => {
+            if (err) {
+                console.error('Error fetching expenses ' + err.message);
+                callback([]);
+            } else {
+                callback(rows);
+            }
+        });
+    }
+
+    calculateTotal(callback) {
+        this.db.get(`SELECT SUM(price) AS total FROM expenses`, [], (err, row) => {
+            if (err) {
+                console.error('Error calculating total ' + err.message);
+                callback(0);
+            } else {
+                callback(row.total || 0);
+            }
+        });
     }
 }

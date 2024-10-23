@@ -9,5 +9,9 @@
   },
   "devDependencies": {
     "electron": "^33.0.1"
+  },
+  "dependencies": {
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
   }
 }
