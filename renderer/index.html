@@ -36,6 +36,13 @@
         </section>
 
         <section class="table-section">
+            <!-- Filter by Category Dropdown -->
+            <label for="filterCategory">Filter by Category:</label>
+            <select id="filterCategory">
+                <option value="all">All</option>
+                <!-- Categories will be dynamically populated here -->
+            </select>
+
             <table id="expenseTable">
                 <thead>
                     <tr>
@@ -59,12 +66,6 @@
         </footer>
     </div>
 
-    <script type="module" src="renderer.js">console.log("from index")</script>
-
-    <script>
-
-
-
-    </script>
+    <script type="module" src="renderer.js"></script>
 </body>
 </html>
