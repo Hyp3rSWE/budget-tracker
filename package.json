@@ -6,18 +6,26 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:linux": "electron-builder --linux"
+    "build": "electron-builder"
   },
   "devDependencies": {
     "electron": "^33.0.1",
     "electron-builder": "^23.6.0"
   },
   "dependencies": {
+    "blob-stream": "^0.1.3",
+    "file-saver": "^2.0.5",
+    "jspdf": "^2.5.2",
+    "pdfkit": "^0.15.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "5.1.6"
   },
   "build": {
     "appId": "com.example.expensetracker",
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
     "linux": {
       "target": [
         "AppImage",
@@ -25,6 +33,25 @@
       ],
       "category": "Finance",
       "icon": "build/icon.png"
-    }
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "renderer/renderer.js",
+      "renderer/ui.js",
+      "renderer/expenseManager.js",
+      "renderer/index.html",
+      "package.json",
+      "node_modules/**/*",
+      "renderer/budget-tracker.db"
+    ],
+    "nsis": {
+			"differentialPackage": false
+		},
+		"dmg": {
+			"writeUpdateInfo": false
+		}
+    
   }
+ 
 }

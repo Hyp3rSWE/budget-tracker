@@ -6,7 +6,7 @@ let mainWindow;
 let db;
 
 app.whenReady().then(() => {
-    db = new sqlite3.Database('budget-tracker.db', (err) => {
+    db = new sqlite3.Database('renderer/budget-tracker.db', (err) => {
         if (err) {
             console.error('Error opening database ' + err.message);
         } else {

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+   
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Tracker</title>
@@ -31,7 +33,6 @@
                     <!-- Categories will be dynamically populated here -->
                 </select>
                 
-                <!-- Date input for transaction date -->
                 <label for="date">Date:</label>
                 <input type="date" id="date">
 
@@ -40,14 +41,12 @@
         </section>
 
         <section class="table-section">
-            <!-- Filter by Category Dropdown -->
             <label for="filterCategory">Filter by Category:</label>
             <select id="filterCategory">
                 <option value="all">All</option>
                 <!-- Categories will be dynamically populated here -->
             </select>
 
-            <!-- Date range filter -->
             <label for="startDate">From:</label>
             <input type="date" id="startDate">
             <label for="endDate">To:</label>
@@ -65,10 +64,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="placeholder">
+                    <tr class="no-expenses">
+                        <td colspan="5" style="text-align: center;">No expenses recorded.</td>
                     </tr>
                 </tbody>
             </table>
+
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <button id="prevPageBtn" disabled>Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPageBtn">Next</button>
+            </div>
         </section>
 
         <footer>
@@ -77,7 +84,8 @@
             </div>
         </footer>
     </div>
-
+    <button type="button" id="exportPdfBtn">Export to PDF</button>
+  
     <script type="module" src="renderer.js"></script>
 </body>
 </html>
