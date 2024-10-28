@@ -80,6 +80,14 @@ th {
     margin-top: 10px;
 }
 
+.pagination > span{
+    text-wrap: nowrap;
+}
+
 .pagination button {
     margin: 0 5px;
+}
+
+#exportPdfBtn{
+
 }
