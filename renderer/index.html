@@ -30,6 +30,10 @@
                 <select id="category">
                     <!-- Categories will be dynamically populated here -->
                 </select>
+                
+                <!-- Date input for transaction date -->
+                <label for="date">Date:</label>
+                <input type="date" id="date">
 
                 <button type="button" id="addExpenseBtn">Add Transaction</button>
             </form>
@@ -43,12 +47,20 @@
                 <!-- Categories will be dynamically populated here -->
             </select>
 
+            <!-- Date range filter -->
+            <label for="startDate">From:</label>
+            <input type="date" id="startDate">
+            <label for="endDate">To:</label>
+            <input type="date" id="endDate">
+            <button type="button" id="filterDateBtn">Filter by Date</button>
+
             <table id="expenseTable">
                 <thead>
                     <tr>
                         <th>Transaction</th>
                         <th>Category</th>
                         <th>Price</th>
+                        <th>Date</th>
                         <th>Action</th>
                     </tr>
                 </thead>
