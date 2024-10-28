@@ -45,7 +45,7 @@ export class ExpenseManager {
             }
         });
     }
-    
+
 
     calculateTotal(callback) {
         this.db.get(`SELECT SUM(price) AS total FROM expenses`, [], (err, row) => {
