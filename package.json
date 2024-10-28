@@ -1,17 +1,30 @@
 {
   "name": "expense-tracker",
   "version": "1.0.0",
-  "description": "",
-  "author": "",
+  "description": "A simple expense tracker app.",
+  "author": "Your Name",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build:linux": "electron-builder --linux"
   },
   "devDependencies": {
-    "electron": "^33.0.1"
+    "electron": "^33.0.1",
+    "electron-builder": "^23.6.0"
   },
   "dependencies": {
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
+  },
+  "build": {
+    "appId": "com.example.expensetracker",
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Finance",
+      "icon": "build/icon.png"
+    }
   }
 }

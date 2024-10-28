@@ -17,11 +17,14 @@ export class UI {
     addExpenseToTable(expense) {
         const tableBody = document.getElementById(this.expenseTableId).querySelector('tbody');
         const row = document.createElement('tr');
+        row.setAttribute('data-id', expense.id);
         
         row.innerHTML = `
             <td>${expense.name}</td>
             <td>${expense.category || 'N/A'}</td>
             <td>${expense.price.toFixed(2)}</td>
+            <td><button class="deleteBtn" data-id="${expense.id}">Delete</button></td>
+
         `;
         tableBody.appendChild(row);
     }
@@ -54,4 +57,17 @@ export class UI {
             categorySelect.appendChild(option);
         });
     }
+
+    removeExpenseFromTable(expenseId) {
+        // Select the row with the matching data-id
+        const row = document.querySelector(`tr[data-id='${expenseId}']`);
+        if (row) {
+            // Remove the row from the table
+            row.remove();
+        } else {
+            console.error(`No row found for expense ID: ${expenseId}`);
+        }
+    }
+    
+    
 }

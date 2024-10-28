@@ -52,4 +52,19 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.clearInputs(expenseInput, priceInput);
         }
     });
+
+    document.getElementById('expenseTable').addEventListener('click', (event) => {
+        if (event.target.classList.contains('deleteBtn')) {
+            const expenseId = event.target.getAttribute('data-id');
+            expenseManager.deleteExpense(expenseId, () => {
+                ui.removeExpenseFromTable(expenseId);
+    
+                expenseManager.calculateTotal((total) => {
+                    ui.updateTotal(total);
+                });
+            });
+        }
+    });
+    
+    
 });
