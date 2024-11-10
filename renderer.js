@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
-// Database setup
 const dbPath = path.join(__dirname, 'budget.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -15,7 +14,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Create required tables
 function createTables() {
     const createTransactionsTableSQL = `
     CREATE TABLE IF NOT EXISTS transactions (
@@ -50,14 +48,12 @@ function createTables() {
     db.run(createIncomesTableSQL, handleError);
 }
 
-// General error handler
 function handleError(err) {
     if (err) {
         console.error('Database error:', err.message);
     }
 }
 
-// Add transaction (expense or income)
 function addTransaction(transaction) {
     const { name, price, category, date, type } = transaction;
 
@@ -83,7 +79,6 @@ function addTransaction(transaction) {
     });
 }
 
-// Fetch all expenses and incomes
 function getAllExpenses() {
     return fetchDataFromTable('expenses');
 }
@@ -105,7 +100,6 @@ function fetchDataFromTable(table) {
     });
 }
 
-// Event listeners on page load
 document.addEventListener('DOMContentLoaded', () => {
     const addExpenseBtn = document.getElementById('addExpenseBtn');
     const expenseInput = document.getElementById('expense');
@@ -121,18 +115,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let expenses = [];
     let incomes = [];
+    let currentPage = 1; 
+    const rowsPerPage = 10; 
 
-    // Load initial data
+
     loadData();
 
-    // Load categories based on transaction type (expense/income)
     const transactionTypeSelect = document.getElementById('transactionType');
     transactionTypeSelect.addEventListener('change', () => {
         populateCategories(transactionTypeSelect.value);
     });
     populateCategories(transactionTypeSelect.value);
 
-    // Add expense or income
     addExpenseBtn.addEventListener('click', () => {
         const expenseName = expenseInput.value.trim();
         const price = parseFloat(priceInput.value.trim());
@@ -161,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Filter by date range
     filterDateBtn.addEventListener('click', () => {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
@@ -174,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotal();
     });
 
-    // Helper function to filter data by date
     function filterByDate(data, startDate, endDate) {
         return data.filter(item => {
             const itemDate = new Date(item.date);
@@ -182,41 +174,84 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load expenses table
     function loadExpensesTable(expenses) {
         const tableBody = document.getElementById('expenseTable').querySelector('tbody');
         tableBody.innerHTML = '';
-
+    
         if (expenses.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No expenses recorded.</td></tr>`;
         } else {
-            expenses.forEach(expense => {
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const paginatedExpenses = expenses.slice(startIndex, endIndex);
+    
+            paginatedExpenses.forEach(expense => {
                 const row = createTableRow(expense, 'expense');
                 tableBody.appendChild(row);
             });
+    
+            updatePaginationControls(expenses.length);
         }
-
+    
         addDeleteListeners('expense');
     }
 
-    // Load incomes table
+    function updatePaginationControls(totalRows) {
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        const prevButton = document.getElementById('prevPageBtn');
+        const nextButton = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+    
+        pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+    
+        // Disable "Previous" button if on first page
+        prevButton.disabled = currentPage === 1;
+    
+        // Disable "Next" button if on the last page
+        nextButton.disabled = currentPage === totalPages;
+    
+        // Enable/disable buttons when user clicks
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadExpensesTable(expenses);
+                loadIncomesTable(incomes);
+            }
+        });
+    
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadExpensesTable(expenses);
+                loadIncomesTable(incomes);
+            }
+        });
+    }
+    
+    
     function loadIncomesTable(incomes) {
         const tableBody = document.getElementById('incomeTable').querySelector('tbody');
         tableBody.innerHTML = '';
-
+    
         if (incomes.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No incomes recorded.</td></tr>`;
         } else {
-            incomes.forEach(income => {
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const paginatedIncomes = incomes.slice(startIndex, endIndex);
+    
+            paginatedIncomes.forEach(income => {
                 const row = createTableRow(income, 'income');
                 tableBody.appendChild(row);
             });
+    
+            updatePaginationControls(incomes.length);
         }
-
+    
         addDeleteListeners('income');
     }
+    
 
-    // Create table row
     function createTableRow(item, type) {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -229,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return row;
     }
 
-    // Add event listeners for delete buttons
     function addDeleteListeners(type) {
         const deleteButtons = document.querySelectorAll('.deleteBtn');
         deleteButtons.forEach(button => {
@@ -240,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Delete a transaction
     function deleteTransaction(id, type) {
         const deleteTransactionSQL = `DELETE FROM transactions WHERE id = ?`;
         const deleteExpenseSQL = `DELETE FROM expenses WHERE id = ?`;
@@ -269,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Update total balance (income - expense)
     function updateTotal() {
         const totalExpenses = expenses.reduce((sum, expense) => sum + expense.price, 0);
         const totalIncomes = incomes.reduce((sum, income) => sum + income.price, 0);
@@ -277,112 +309,99 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('total').innerText = balance.toFixed(2);
     }
 
-// Export data to PDF
-exportPdfBtn.addEventListener('click', () => {
-    const doc = new PDFDocument();
-    const fileName = 'transactions_report.pdf';
-    const filePath = path.join(__dirname, fileName);
+    exportPdfBtn.addEventListener('click', () => {
+        const doc = new PDFDocument();
+        const fileName = 'transactions_report.pdf';
+        const filePath = path.join(__dirname, fileName);
 
-    doc.pipe(fs.createWriteStream(filePath));
-    doc.fontSize(24).text('Transactions Report', { align: 'center' });
-    doc.moveDown(1);
+        doc.pipe(fs.createWriteStream(filePath));
+        doc.fontSize(24).text('Transactions Report', { align: 'center' });
+        doc.moveDown(1);
 
-    // Add a line below the title for a more official look
-    doc.lineWidth(1)
-       .strokeColor('black')
-       .moveTo(50, doc.y)
-       .lineTo(550, doc.y)
-       .stroke();
-    doc.moveDown(1);
+        doc.lineWidth(1)
+           .strokeColor('black')
+           .moveTo(50, doc.y)
+           .lineTo(550, doc.y)
+           .stroke();
+        doc.moveDown(1);
 
-    // Generate and add table sections
-    generateTable(doc, 'Expenses', expenses);
-    
-    // Add some space before starting the "Income" section
-    doc.moveDown(2);  // Adjust this value to control the vertical gap between sections
-    
-    generateTable(doc, 'Incomes', incomes);
+        generateTable(doc, 'Expenses', expenses);
+        
+        doc.moveDown(2);  
+        
+        generateTable(doc, 'Incomes', incomes);
 
-    doc.end();
-    alert('PDF generated successfully!');
-});
-
-// Generate table for PDF export with more polished layout
-function generateTable(doc, title, data) {
-    // Title with bold text and underline
-    doc.fontSize(16).font('Helvetica-Bold').text(title, { underline: true });
-    doc.fontSize(12).font('Helvetica');
-    doc.moveDown(0.5);
-
-    // Draw a line under the title
-    doc.lineWidth(1)
-       .strokeColor('black')
-       .moveTo(50, doc.y)
-       .lineTo(550, doc.y)
-       .stroke();
-    doc.moveDown(0.5);
-
-    // Create table headers with bold text and lines for structure
-    const headers = ['Name', 'Category', 'Price', 'Date'];
-    const rowHeight = 25;  // Increased row height for more vertical space
-    const columnWidths = [220, 180, 140, 130]; // Increased column widths
-    let startX = 50;  // X position for the first column
-    let startY = doc.y; // Start from the current y position
-
-    // Draw headers in aligned positions
-    doc.font('Helvetica-Bold');
-    headers.forEach((header, index) => {
-        const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
-        doc.text(header, x, startY, { width: columnWidths[index], align: 'center' });
+        doc.end();
+        alert('PDF generated successfully!');
     });
-    startY += rowHeight;  // Move down after the header
 
-    // Draw a line under the header
-    doc.lineWidth(1)
-       .moveTo(50, startY)
-       .lineTo(550, startY)
-       .stroke();
-    startY += 5;  // Add a small gap after the line
-
-    // Loop through the data and add rows
-    doc.font('Helvetica');
-    if (data.length === 0) {
-        doc.text('No data available', 50, startY);
-        startY += rowHeight;  // Move down after the "No data" text
-    } else {
-        data.forEach(item => {
-            const row = [
-                item.name,
-                item.category,
-                `$${item.price.toFixed(2)}`,
-                item.date
-            ];
-
-            // Draw each row with fixed alignment
-            row.forEach((cell, index) => {
-                const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
-                doc.text(cell, x, startY, { width: columnWidths[index], align: 'center' });
-            });
-
-            startY += rowHeight;  // Move down after each row
-
-            // Check if we need to add a new page
-            if (startY > 750) {
-                doc.addPage();  // Start a new page if the content is too long
-                startY = 50;  // Reset Y position for the new page
-            }
+    function generateTable(doc, title, data) {
+        doc.fontSize(16).font('Helvetica-Bold').text(title, { underline: true });
+        doc.fontSize(12).font('Helvetica');
+        doc.moveDown(1); // Increased the space between the title and table headers
+    
+        // Horizontal line for table separation
+        doc.lineWidth(1)
+           .strokeColor('black')
+           .moveTo(50, doc.y)
+           .lineTo(550, doc.y)
+           .stroke();
+        doc.moveDown(0.5);
+    
+        const headers = ['Name', 'Category', 'Price', 'Date'];
+        const rowHeight = 25;
+        const columnWidths = [120, 140, 120, 130];
+        let startX = 50;
+        let startY = doc.y;
+    
+        doc.font('Helvetica-Bold');
+        headers.forEach((header, index) => {
+            const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
+            doc.text(header, x, startY, { width: columnWidths[index], align: 'center' });
         });
+        startY += rowHeight;
+    
+        doc.lineWidth(1)
+           .moveTo(50, startY)
+           .lineTo(550, startY)
+           .stroke();
+        startY += 5;
+    
+        doc.font('Helvetica');
+        if (data.length === 0) {
+            doc.text('No data available', 50, startY);
+            startY += rowHeight;
+        } else {
+            data.forEach(item => {
+                const row = [
+                    item.name,
+                    item.category,
+                    `$${item.price.toFixed(2)}`,
+                    item.date
+                ];
+    
+                row.forEach((cell, index) => {
+                    const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
+                    doc.text(cell, x, startY, { width: columnWidths[index], align: 'center' });
+                });
+    
+                startY += rowHeight;
+    
+                if (startY > 750) {
+                    doc.addPage();
+                    startY = 50;
+                }
+            });
+        }
+    
+        doc.lineWidth(1)
+           .moveTo(50, startY)
+           .lineTo(550, startY)
+           .stroke();
+        startY += 10;
     }
+    
 
-    // Add a final line at the bottom of the table for a more finished look
-    doc.lineWidth(1)
-       .moveTo(50, startY)
-       .lineTo(550, startY)
-       .stroke();
-    startY += 10;  // Small space after the last line
-}
-
-    // Populate categories dropdown based on transaction type
     function populateCategories(transactionType) {
         const categories = transactionType === 'income'
             ? ['Salary', 'Business', 'Investment']
@@ -405,18 +424,18 @@ function generateTable(doc, title, data) {
         });
     }
 
-    // Load all data from the database
     function loadData() {
         getAllExpenses().then(data => {
             expenses = data;
             loadExpensesTable(expenses);
             updateTotal();
         }).catch(handleError);
-
+    
         getAllIncomes().then(data => {
             incomes = data;
             loadIncomesTable(incomes);
             updateTotal();
         }).catch(handleError);
     }
+    
 });
