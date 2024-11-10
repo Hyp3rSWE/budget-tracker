@@ -4,19 +4,18 @@ const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
-// Initialize SQLite database
-const dbPath = path.join(__dirname, 'budget.db'); // Specify path for database file
+// Database setup
+const dbPath = path.join(__dirname, 'budget.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to SQLite database.');
-        // Create the transactions, expenses, and incomes tables if they don't exist
         createTables();
     }
 });
 
-// Create the transactions, expenses, and incomes tables if they don't exist
+// Create required tables
 function createTables() {
     const createTransactionsTableSQL = `
     CREATE TABLE IF NOT EXISTS transactions (
@@ -46,24 +45,19 @@ function createTables() {
         date TEXT
     )`;
 
-    db.run(createTransactionsTableSQL, (err) => {
-        if (err) {
-            console.error('Error creating transactions table:', err.message);
-        }
-    });
-    db.run(createExpensesTableSQL, (err) => {
-        if (err) {
-            console.error('Error creating expenses table:', err.message);
-        }
-    });
-    db.run(createIncomesTableSQL, (err) => {
-        if (err) {
-            console.error('Error creating incomes table:', err.message);
-        }
-    });
+    db.run(createTransactionsTableSQL, handleError);
+    db.run(createExpensesTableSQL, handleError);
+    db.run(createIncomesTableSQL, handleError);
 }
 
-// Add transaction (expense or income) to the database
+// General error handler
+function handleError(err) {
+    if (err) {
+        console.error('Database error:', err.message);
+    }
+}
+
+// Add transaction (expense or income)
 function addTransaction(transaction) {
     const { name, price, category, date, type } = transaction;
 
@@ -76,13 +70,12 @@ function addTransaction(transaction) {
             if (err) {
                 reject(err);
             } else {
-                // Insert into the respective table based on the type
                 const insertSQL = type === 'expense' ? insertExpenseSQL : insertIncomeSQL;
                 db.run(insertSQL, [name, price, category, date], function (err) {
                     if (err) {
                         reject(err);
                     } else {
-                        resolve(this.lastID); // Return the inserted row's ID
+                        resolve(this.lastID);
                     }
                 });
             }
@@ -90,49 +83,29 @@ function addTransaction(transaction) {
     });
 }
 
-// Fetch all transactions from the database
-function getAllTransactions() {
-    return new Promise((resolve, reject) => {
-        const selectSQL = 'SELECT * FROM transactions';
-        db.all(selectSQL, [], (err, rows) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(rows); // Return all rows
-            }
-        });
-    });
-}
-
-// Fetch all expenses from the database
+// Fetch all expenses and incomes
 function getAllExpenses() {
-    return new Promise((resolve, reject) => {
-        const selectSQL = 'SELECT * FROM expenses';
-        db.all(selectSQL, [], (err, rows) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(rows); // Return all rows
-            }
-        });
-    });
+    return fetchDataFromTable('expenses');
 }
 
-// Fetch all incomes from the database
 function getAllIncomes() {
+    return fetchDataFromTable('incomes');
+}
+
+function fetchDataFromTable(table) {
     return new Promise((resolve, reject) => {
-        const selectSQL = 'SELECT * FROM incomes';
+        const selectSQL = `SELECT * FROM ${table}`;
         db.all(selectSQL, [], (err, rows) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(rows); // Return all rows
+                resolve(rows);
             }
         });
     });
 }
 
-// Handle the page's DOM elements
+// Event listeners on page load
 document.addEventListener('DOMContentLoaded', () => {
     const addExpenseBtn = document.getElementById('addExpenseBtn');
     const expenseInput = document.getElementById('expense');
@@ -145,36 +118,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
     const filterDateBtn = document.getElementById('filterDateBtn');
+
     let expenses = [];
     let incomes = [];
-    let currentPage = 1;
-    const perPage = 10;
 
-    // Load expenses and incomes from the database on start
-    getAllExpenses().then(data => {
-        expenses = data;
-        loadExpensesTable(expenses);
-        updateTotal();
-    }).catch(err => {
-        console.error('Error fetching expenses:', err);
-    });
+    // Load initial data
+    loadData();
 
-    getAllIncomes().then(data => {
-        incomes = data;
-        loadIncomesTable(incomes);
-        updateTotal();
-    }).catch(err => {
-        console.error('Error fetching incomes:', err);
-    });
-
-    // Dynamically populate categories based on transaction type
+    // Load categories based on transaction type (expense/income)
     const transactionTypeSelect = document.getElementById('transactionType');
     transactionTypeSelect.addEventListener('change', () => {
         populateCategories(transactionTypeSelect.value);
     });
     populateCategories(transactionTypeSelect.value);
 
-    // Add new expense or income
+    // Add expense or income
     addExpenseBtn.addEventListener('click', () => {
         const expenseName = expenseInput.value.trim();
         const price = parseFloat(priceInput.value.trim());
@@ -185,151 +143,133 @@ document.addEventListener('DOMContentLoaded', () => {
         if (expenseName && !isNaN(price)) {
             const transaction = { name: expenseName, price, category, date, type: transactionType };
 
-            // Add to DB
-            addTransaction(transaction).then(() => {
-                if (transactionType === 'expense') {
-                    expenses.push(transaction);
-                    loadExpensesTable(expenses);
-                } else {
-                    incomes.push(transaction);
-                    loadIncomesTable(incomes);
-                }
-
-                updateTotal();
-                expenseForm.reset();
-            }).catch(err => {
-                console.error('Error adding transaction:', err);
-            });
+            addTransaction(transaction)
+                .then(() => {
+                    if (transactionType === 'expense') {
+                        expenses.push(transaction);
+                        loadExpensesTable(expenses);
+                    } else {
+                        incomes.push(transaction);
+                        loadIncomesTable(incomes);
+                    }
+                    updateTotal();
+                    expenseForm.reset();
+                })
+                .catch(err => {
+                    console.error('Error adding transaction:', err);
+                });
         }
     });
 
-    // Filter transactions by date
+    // Filter by date range
     filterDateBtn.addEventListener('click', () => {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
 
-        const filteredExpenses = expenses.filter(expense => {
-            const expenseDate = new Date(expense.date);
-            return (!startDate || expenseDate >= new Date(startDate)) && (!endDate || expenseDate <= new Date(endDate));
-        });
-
-        const filteredIncomes = incomes.filter(income => {
-            const incomeDate = new Date(income.date);
-            return (!startDate || incomeDate >= new Date(startDate)) && (!endDate || incomeDate <= new Date(endDate));
-        });
+        const filteredExpenses = filterByDate(expenses, startDate, endDate);
+        const filteredIncomes = filterByDate(incomes, startDate, endDate);
 
         loadExpensesTable(filteredExpenses);
         loadIncomesTable(filteredIncomes);
         updateTotal();
     });
 
-    // Load expenses into the table
-// Load expenses into the table
-function loadExpensesTable(expenses) {
-    const tableBody = document.getElementById('expenseTable').querySelector('tbody');
-    tableBody.innerHTML = '';
-
-    if (expenses.length === 0) {
-        const row = document.createElement('tr');
-        row.classList.add('no-expenses');
-        row.innerHTML = `<td colspan="5" style="text-align: center;">No expenses recorded.</td>`;
-        tableBody.appendChild(row);
+    // Helper function to filter data by date
+    function filterByDate(data, startDate, endDate) {
+        return data.filter(item => {
+            const itemDate = new Date(item.date);
+            return (!startDate || itemDate >= new Date(startDate)) && (!endDate || itemDate <= new Date(endDate));
+        });
     }
 
-    expenses.forEach(expense => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${expense.name}</td>
-            <td>${expense.category}</td>
-            <td>${expense.price.toFixed(2)}</td>
-            <td>${expense.date}</td>
-            <td><button class="deleteBtn" data-id="${expense.id}">Delete</button></td>
-        `;
-        tableBody.appendChild(row);
-    });
+    // Load expenses table
+    function loadExpensesTable(expenses) {
+        const tableBody = document.getElementById('expenseTable').querySelector('tbody');
+        tableBody.innerHTML = '';
 
-    // Add event listeners for delete buttons
-    const deleteButtons = tableBody.querySelectorAll('.deleteBtn');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const id = button.getAttribute('data-id');
-            deleteTransaction(id, 'expense'); // Pass the type ('expense')
-        });
-    });
-}
-
-// Load incomes into the table
-function loadIncomesTable(incomes) {
-    const tableBody = document.getElementById('incomeTable').querySelector('tbody');
-    tableBody.innerHTML = '';
-
-    if (incomes.length === 0) {
-        const row = document.createElement('tr');
-        row.classList.add('no-incomes');
-        row.innerHTML = `<td colspan="5" style="text-align: center;">No incomes recorded.</td>`;
-        tableBody.appendChild(row);
-    }
-
-    incomes.forEach(income => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${income.name}</td>
-            <td>${income.category}</td>
-            <td>${income.price.toFixed(2)}</td>
-            <td>${income.date}</td>
-            <td><button class="deleteBtn" data-id="${income.id}">Delete</button></td>
-        `;
-        tableBody.appendChild(row);
-    });
-
-    // Add event listeners for delete buttons
-    const deleteButtons = tableBody.querySelectorAll('.deleteBtn');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const id = button.getAttribute('data-id');
-            deleteTransaction(id, 'income'); // Pass the type ('income')
-        });
-    });
-}
-
-// Delete transaction (expense or income) from the database
-// Delete transaction (expense or income) from the database
-function deleteTransaction(id, type) {
-    const deleteTransactionSQL = `DELETE FROM transactions WHERE id = ?`;
-    const deleteExpenseSQL = `DELETE FROM expenses WHERE id = ?`;
-    const deleteIncomeSQL = `DELETE FROM incomes WHERE id = ?`;
-
-    // Determine the appropriate SQL query based on the type of transaction
-    const deleteSQL = type === 'expense' ? deleteExpenseSQL : deleteIncomeSQL;
-
-    db.run(deleteSQL, [id], (err) => {
-        if (err) {
-            console.error('Error deleting transaction:', err.message);
+        if (expenses.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No expenses recorded.</td></tr>`;
         } else {
-            // Refetch expenses and incomes to reload the tables
-            if (type === 'expense') {
-                getAllExpenses().then(data => {
-                    expenses = data;
-                    loadExpensesTable(expenses);
-                    updateTotal();
-                }).catch(err => {
-                    console.error('Error fetching expenses after deletion:', err);
-                });
-            } else {
-                getAllIncomes().then(data => {
-                    incomes = data;
-                    loadIncomesTable(incomes);
-                    updateTotal();
-                }).catch(err => {
-                    console.error('Error fetching incomes after deletion:', err);
-                });
-            }
+            expenses.forEach(expense => {
+                const row = createTableRow(expense, 'expense');
+                tableBody.appendChild(row);
+            });
         }
-    });
-}
 
+        addDeleteListeners('expense');
+    }
 
-    // Update total balance
+    // Load incomes table
+    function loadIncomesTable(incomes) {
+        const tableBody = document.getElementById('incomeTable').querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        if (incomes.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No incomes recorded.</td></tr>`;
+        } else {
+            incomes.forEach(income => {
+                const row = createTableRow(income, 'income');
+                tableBody.appendChild(row);
+            });
+        }
+
+        addDeleteListeners('income');
+    }
+
+    // Create table row
+    function createTableRow(item, type) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.name}</td>
+            <td>${item.category}</td>
+            <td>${item.price.toFixed(2)}</td>
+            <td>${item.date}</td>
+            <td><button class="deleteBtn" data-id="${item.id}" data-type="${type}">Delete</button></td>
+        `;
+        return row;
+    }
+
+    // Add event listeners for delete buttons
+    function addDeleteListeners(type) {
+        const deleteButtons = document.querySelectorAll('.deleteBtn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.getAttribute('data-id');
+                deleteTransaction(id, button.getAttribute('data-type'));
+            });
+        });
+    }
+
+    // Delete a transaction
+    function deleteTransaction(id, type) {
+        const deleteTransactionSQL = `DELETE FROM transactions WHERE id = ?`;
+        const deleteExpenseSQL = `DELETE FROM expenses WHERE id = ?`;
+        const deleteIncomeSQL = `DELETE FROM incomes WHERE id = ?`;
+
+        const deleteSQL = type === 'expense' ? deleteExpenseSQL : deleteIncomeSQL;
+
+        db.run(deleteSQL, [id], (err) => {
+            if (err) {
+                console.error('Error deleting transaction:', err.message);
+            } else {
+                if (type === 'expense') {
+                    getAllExpenses().then(data => {
+                        expenses = data;
+                        loadExpensesTable(expenses);
+                        updateTotal();
+                    }).catch(handleError);
+                } else {
+                    getAllIncomes().then(data => {
+                        incomes = data;
+                        loadIncomesTable(incomes);
+                        updateTotal();
+                    }).catch(handleError);
+                }
+            }
+        });
+    }
+
+    // Update total balance (income - expense)
     function updateTotal() {
         const totalExpenses = expenses.reduce((sum, expense) => sum + expense.price, 0);
         const totalIncomes = incomes.reduce((sum, income) => sum + income.price, 0);
@@ -337,35 +277,112 @@ function deleteTransaction(id, type) {
         document.getElementById('total').innerText = balance.toFixed(2);
     }
 
-    // Export to PDF
-    exportPdfBtn.addEventListener('click', () => {
-        const doc = new PDFDocument();
-        const fileName = 'transactions_report.pdf';
-        const filePath = path.join(__dirname, fileName);
+// Export data to PDF
+exportPdfBtn.addEventListener('click', () => {
+    const doc = new PDFDocument();
+    const fileName = 'transactions_report.pdf';
+    const filePath = path.join(__dirname, fileName);
 
-        doc.pipe(fs.createWriteStream(filePath));
-        doc.fontSize(20).text('Transactions Report', { align: 'center' });
-        doc.moveDown(2);
+    doc.pipe(fs.createWriteStream(filePath));
+    doc.fontSize(24).text('Transactions Report', { align: 'center' });
+    doc.moveDown(1);
 
-        // Expenses
-        doc.text('Expenses');
-        expenses.forEach(expense => {
-            doc.text(`${expense.name} - ${expense.category} - $${expense.price.toFixed(2)} - ${expense.date}`);
-        });
+    // Add a line below the title for a more official look
+    doc.lineWidth(1)
+       .strokeColor('black')
+       .moveTo(50, doc.y)
+       .lineTo(550, doc.y)
+       .stroke();
+    doc.moveDown(1);
 
-        doc.moveDown(1);
+    // Generate and add table sections
+    generateTable(doc, 'Expenses', expenses);
+    
+    // Add some space before starting the "Income" section
+    doc.moveDown(2);  // Adjust this value to control the vertical gap between sections
+    
+    generateTable(doc, 'Incomes', incomes);
 
-        // Incomes
-        doc.text('Incomes');
-        incomes.forEach(income => {
-            doc.text(`${income.name} - ${income.category} - $${income.price.toFixed(2)} - ${income.date}`);
-        });
+    doc.end();
+    alert('PDF generated successfully!');
+});
 
-        doc.end();
-        alert('PDF generated successfully!');
+// Generate table for PDF export with more polished layout
+function generateTable(doc, title, data) {
+    // Title with bold text and underline
+    doc.fontSize(16).font('Helvetica-Bold').text(title, { underline: true });
+    doc.fontSize(12).font('Helvetica');
+    doc.moveDown(0.5);
+
+    // Draw a line under the title
+    doc.lineWidth(1)
+       .strokeColor('black')
+       .moveTo(50, doc.y)
+       .lineTo(550, doc.y)
+       .stroke();
+    doc.moveDown(0.5);
+
+    // Create table headers with bold text and lines for structure
+    const headers = ['Name', 'Category', 'Price', 'Date'];
+    const rowHeight = 25;  // Increased row height for more vertical space
+    const columnWidths = [220, 180, 140, 130]; // Increased column widths
+    let startX = 50;  // X position for the first column
+    let startY = doc.y; // Start from the current y position
+
+    // Draw headers in aligned positions
+    doc.font('Helvetica-Bold');
+    headers.forEach((header, index) => {
+        const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
+        doc.text(header, x, startY, { width: columnWidths[index], align: 'center' });
     });
+    startY += rowHeight;  // Move down after the header
 
-    // Populate categories dynamically
+    // Draw a line under the header
+    doc.lineWidth(1)
+       .moveTo(50, startY)
+       .lineTo(550, startY)
+       .stroke();
+    startY += 5;  // Add a small gap after the line
+
+    // Loop through the data and add rows
+    doc.font('Helvetica');
+    if (data.length === 0) {
+        doc.text('No data available', 50, startY);
+        startY += rowHeight;  // Move down after the "No data" text
+    } else {
+        data.forEach(item => {
+            const row = [
+                item.name,
+                item.category,
+                `$${item.price.toFixed(2)}`,
+                item.date
+            ];
+
+            // Draw each row with fixed alignment
+            row.forEach((cell, index) => {
+                const x = startX + columnWidths.slice(0, index).reduce((sum, w) => sum + w, 0);
+                doc.text(cell, x, startY, { width: columnWidths[index], align: 'center' });
+            });
+
+            startY += rowHeight;  // Move down after each row
+
+            // Check if we need to add a new page
+            if (startY > 750) {
+                doc.addPage();  // Start a new page if the content is too long
+                startY = 50;  // Reset Y position for the new page
+            }
+        });
+    }
+
+    // Add a final line at the bottom of the table for a more finished look
+    doc.lineWidth(1)
+       .moveTo(50, startY)
+       .lineTo(550, startY)
+       .stroke();
+    startY += 10;  // Small space after the last line
+}
+
+    // Populate categories dropdown based on transaction type
     function populateCategories(transactionType) {
         const categories = transactionType === 'income'
             ? ['Salary', 'Business', 'Investment']
@@ -379,7 +396,6 @@ function deleteTransaction(id, type) {
             categorySelect.appendChild(option);
         });
 
-        // Also populate filter categories
         filterCategorySelect.innerHTML = '<option value="all">All</option>';
         categories.forEach(category => {
             const option = document.createElement('option');
@@ -387,5 +403,20 @@ function deleteTransaction(id, type) {
             option.textContent = category;
             filterCategorySelect.appendChild(option);
         });
+    }
+
+    // Load all data from the database
+    function loadData() {
+        getAllExpenses().then(data => {
+            expenses = data;
+            loadExpensesTable(expenses);
+            updateTotal();
+        }).catch(handleError);
+
+        getAllIncomes().then(data => {
+            incomes = data;
+            loadIncomesTable(incomes);
+            updateTotal();
+        }).catch(handleError);
     }
 });

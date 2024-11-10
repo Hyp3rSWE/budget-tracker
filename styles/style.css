@@ -22,7 +22,18 @@ header {
 
 .input-section, .table-section {
     margin-bottom: 20px;
+    
 }
+
+/* Set max-width for all columns in both tables */
+#expenseTable th, #expenseTable td, 
+#incomeTable th, #incomeTable td {
+    max-width: 200px; /* Adjust the max-width as needed */
+    overflow: hidden; /* To handle text overflow */
+    text-overflow: ellipsis; /* Adds "..." for overflow text */
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
 
 input, select, button {
     display: block;
