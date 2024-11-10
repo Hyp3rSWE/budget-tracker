@@ -1,0 +1,24 @@
+{
+  "name": "budget-tracker",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "budget",
+    "tracker"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "A budget tracker app built with Electron",
+  "devDependencies": {
+    "electron": "^33.2.0"
+  },
+  "dependencies": {
+    "pdfkit": "^0.12.3",
+    "sqlite3": "^5.1.7"
+  }
+}
