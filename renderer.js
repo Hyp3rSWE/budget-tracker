@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let expenses = [];
     let incomes = [];
     let currentPage = 1; 
-    const rowsPerPage = 10; 
+    const rowsPerPage = 5; 
 
 
     loadData();

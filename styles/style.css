@@ -1,101 +1,176 @@
+/* General Styling */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
+    color: #333;
 }
 
+
+.nextPageBtn {
+    width: 100px;
+}
+/* Main Container */
 .container {
-    max-width: 900px;
-    margin: 0 auto;
+    max-width: 1200px;
+    margin: 40px auto;
     padding: 20px;
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Header Styling */
 header {
     text-align: center;
-    color: #4720ab;
+    color: #333;
     font-weight: bold;
-}
-
-.input-section, .table-section {
+    font-size: 2em;
     margin-bottom: 20px;
-    
 }
 
-/* Set max-width for all columns in both tables */
-#expenseTable th, #expenseTable td, 
-#incomeTable th, #incomeTable td {
-    max-width: 200px; /* Adjust the max-width as needed */
-    overflow: hidden; /* To handle text overflow */
-    text-overflow: ellipsis; /* Adds "..." for overflow text */
-    white-space: nowrap; /* Prevents text from wrapping */
+/* Dashboard Layout */
+.dashboard {
+    display: flex;
+    gap: 20px;
 }
 
+/* Left Block: Input and Buttons */
+.left-block {
+    flex: 1;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.left-block h2 {
+    color: #007bff;
+    font-size: 1.4em;
+    margin-bottom: 15px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
 input, select, button {
-    display: block;
-    width: calc(100% - 10px);
-    margin: 5px 0;
+    width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #007bff;
+    outline: none;
 }
 
 button {
-    background-color: #4720ab;
+    background-color: #007bff;
     color: white;
     border: none;
+    padding: 12px;
+    border-radius: 4px;
     cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #4720ab;
+    background-color: #0056b3;
+}
+
+.total {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Right Block: Tables */
+.right-block {
+    flex: 2;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.right-block h2 {
+    color: #007bff;
+    font-size: 1.4em;
+    margin-bottom: 15px;
+}
+
+.table-section {
+    margin-top: 30px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 th, td {
-    border: 1px solid #ccc;
-    padding: 10px;
+    padding: 12px;
+    border: 1px solid #ddd;
     text-align: left;
+    font-size: 0.9em;
 }
 
 th {
-    background-color: #f8f9fa;
+    background-color: #f1f1f1;
+    color: #007bff;
 }
 
+/* Delete Button */
 .deleteBtn {
-    background-color: #dc3545;
+    background-color: #e74c3c;
     border: none;
     color: white;
     padding: 5px 10px;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .deleteBtn:hover {
-    background-color: #c82333;
+    background-color: #c0392b;
 }
 
-
-.pagination {
+/* Pagination Controls */
+.pagination-controls {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
-.pagination > span{
-    text-wrap: nowrap;
+.pagination-controls .page-info {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
 }
 
-.pagination button {
-    margin: 0 5px;
+.pagination-controls button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+}
