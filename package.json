@@ -20,7 +20,7 @@
     "sqlite3": "^5.1.7"
   },
   "scripts": {
-    "build": "electron-builder",
+    "build": "electron-builder --win --x64",
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -43,7 +43,7 @@
   }
 ],
     "directories": {
-      "output": "dist"
+      "output": "distWin"
     }
   }
 }
