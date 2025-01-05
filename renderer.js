@@ -3,14 +3,18 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const { app } = require('electron');
 
 const dbPath = path.join(__dirname, 'budget.db');
+//const dbPath = path.join(process.resourcesPath, 'budget.db')    for building the executable (sorry dynamically mahbitch n3ayi m3aha rohi)
+
+
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
-        console.log('Connected to SQLite database.');
-        createTables();
+        console.log('Connected to SQLite database at:', dbPath);
+        createTables(); 
     }
 });
 
